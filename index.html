@@ -42,7 +42,7 @@
     <!-- ────────────────── Templates (hidden) ────────────────── -->
     <template id="listNavTpl">
         <button
-            class="list-nav flex-1 basis-0 text-center whitespace-nowrap px-4 py-2 rounded-xl text-sm font-medium transition focus:outline-none border border-primary/30 hover:border-primary hover:bg-cyan-500 active:scale-95"></button>
+            class="list-nav whitespace-nowrap px-4 py-2 rounded-xl text-sm font-medium transition focus:outline-none border border-primary/30 hover:border-primary hover:bg-cyan-500 active:scale-95"></button>
     </template>
 
     <template id="listTpl">
@@ -123,6 +123,9 @@
                         const btn = tpl.cloneNode(true);
                         btn.textContent = l.name;
                         btn.dataset.id = l.id;
+                        if (data.lists.length > 4) {
+                            btn.classList.add("flex-1", "basis-0", "text-center");
+                        }
                         if (l.id === currentListId) {
                             btn.classList.add("bg-primary", "text-white", "shadow");
                         }
