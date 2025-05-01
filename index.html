@@ -42,7 +42,7 @@
     <!-- ────────────────── Templates (hidden) ────────────────── -->
     <template id="listNavTpl">
         <button
-            class="list-nav whitespace-nowrap px-4 py-2 rounded-xl text-sm font-medium transition focus:outline-none border hover:bg-cyan-500 active:scale-95"></button>
+            class="list-nav flex-1 basis-0 text-center whitespace-nowrap px-4 py-2 rounded-xl text-sm font-medium transition focus:outline-none border border-primary/30 hover:border-primary hover:bg-cyan-500 active:scale-95"></button>
     </template>
 
     <template id="listTpl">
@@ -213,8 +213,9 @@
                         return;
                     }
                     if (confirm("Confirm deletion.")) {
+                        const idx = data.lists.findIndex((l) => l.id === list.id);
                         data.lists = data.lists.filter((l) => l.id !== list.id);
-                        currentListId = data.lists[0].id;
+                        currentListId = data.lists[Math.max(0, idx - 1)].id;
                         saveData();
                         renderAll();
                     }
