@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Todo</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- SortableJS (drag‑and‑drop) -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#22d3ee", // cyan-400
+                    },
+                },
+            },
+        };
+    </script>
+</head>
+
+<body class="min-h-screen bg-cyan-50 text-gray-800 font-sans flex flex-col items-center p-6 select-none">
+    <!-- Lists navigation -->
+    <nav id="listsNav" class="w-full max-w-4xl bg-white flex gap-2 overflow-x-auto p-2 mb-4 border rounded-lg"></nav>
+
+    <!-- Main list card -->
+    <main id="listContainer" class="w-full max-w-4xl bg-white rounded-2xl shadow-lg p-6 grid gap-6 transition"
+        data-active-list=""></main>
+
+    <!-- Floating action (add list) -->
+    <button id="addListBtn" aria-label="Add list"
+        class="fixed bottom-6 right-6 md:right-10 bg-primary hover:bg-cyan-500 text-white w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-3xl transition transform hover:scale-105">
+        +
+    </button>
+
+    <!-- ────────────────── Templates (hidden) ────────────────── -->
+    <template id="listNavTpl">
+        <button
+            class="list-nav whitespace-nowrap px-4 py-2 rounded-xl text-sm font-medium transition focus:outline-none border border-transparent hover:bg-cyan-500 active:scale-95"></button>
+    </template>
+
+    <template id="listTpl">
+        <section class="list-section">
+            <header class="flex items-center gap-2 mb-4">
+                <h2 class="list-title text-2xl font-semibold focus:outline-none" contenteditable="true"></h2>
+                <button class="delete-list ml-auto text-gray-400 hover:text-red-500" aria-label="Delete list">
+                    🗑️
+                </button>
+            </header>
+
+            <!-- Add task input -->
+            <div class="flex mb-4">
+                <input type="text" placeholder="New Task"
+                    class="new-task flex-grow px-4 py-2 rounded-l-lg border border-gray-200 focus:ring-primary focus:border-primary focus:outline-none" />
+                <button
+                    class="add-task bg-primary hover:bg-cyan-500 text-white px-4 py-2 rounded-r-lg shadow transition">
+                    Add
+                </button>
+            </div>
+
+            <!-- Active / Done containers -->
+            <div class="grid gap-4">
+                <ul class="tasks-active min-h-[40px]" data-section="active"></ul>
+                <hr class="border-dashed" />
+                <ul class="tasks-done min-h-[40px] opacity-80" data-section="done"></ul>
+            </div>
+        </section>
+    </template>
+
+    <template id="taskTpl">
+        <li
+            class="task flex items-center gap-3 bg-cyan-100/40 hover:bg-cyan-100 rounded-xl px-4 py-2 shadow-sm cursor-grab active:cursor-grabbing transition-transform">
+            <input type="checkbox" class="toggle h-5 w-5 accent-primary" />
+            <span class="flex-grow break-words"></span>
+            <button class="delete-task text-gray-400 hover:text-red-500" aria-label="Delete task">✕</button>
+        </li>
+    </template>
+
+    <!-- ────────────────── Application Logic ────────────────── -->
+    <script>
+        (function () {
+            /* ───────────── Utilities ───────────── */
+            const $ = (sel, ctx = document) => ctx.querySelector(sel);
+            const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
+            const uuid = () => crypto.randomUUID();
+
+            /* ───────────── Persistence ───────────── */
+            const STORAGE_KEY = "todoApp";
+            const loadData = () => {
+                try {
+                    return JSON.parse(localStorage.getItem(STORAGE_KEY)) ?? { lists: [] };
+                } catch {
+                    return { lists: [] };
+                }
+            };
+            const saveData = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+
+            /* Initial data */
+            let data = loadData();
+            if (!data.lists.length) {
+                data.lists.push({ id: uuid(), name: "New List", order: 0, items: [] });
+            }
+
+            /* ───────────── Element refs ───────────── */
+            const listContainer = $("#listContainer");
+            const listsNav = $("#listsNav");
+            const addListBtn = $("#addListBtn");
+            let currentListId = data.lists[0].id;
+
+            /* ───────────── Rendering ───────────── */
+            const renderNav = () => {
+                listsNav.innerHTML = "";
+                const tpl = $("#listNavTpl").content.firstElementChild;
+                data.lists
+                    .sort((a, b) => a.order - b.order)
+                    .forEach((l) => {
+                        const btn = tpl.cloneNode(true);
+                        btn.textContent = l.name;
+                        btn.dataset.id = l.id;
+                        if (l.id === currentListId) {
+                            btn.classList.add("bg-primary", "text-white", "shadow");
+                        }
+                        listsNav.appendChild(btn);
+                    });
+            };
+
+            const renderTasks = (ul, section, list) => {
+                ul.innerHTML = "";
+                list.items
+                    .filter((it) => (section === "active" ? !it.completed : it.completed))
+                    .sort((a, b) => a.order - b.order)
+                    .forEach((item) => {
+                        const li = $("#taskTpl").content.firstElementChild.cloneNode(true);
+                        li.dataset.id = item.id;
+                        $("span", li).textContent = item.text;
+                        $(".toggle", li).checked = item.completed;
+                        ul.appendChild(li);
+                    });
+            };
+
+            const renderList = () => {
+                listContainer.innerHTML = "";
+                const list = data.lists.find((l) => l.id === currentListId);
+                if (!list) return;
+
+                const section = $("#listTpl").content.firstElementChild.cloneNode(true);
+                section.dataset.listId = list.id;
+                $(".list-title", section).textContent = list.name;
+
+                renderTasks($(".tasks-active", section), "active", list);
+                renderTasks($(".tasks-done", section), "done", list);
+
+                listContainer.appendChild(section);
+                listContainer.dataset.activeList = currentListId;
+
+                attachListEvents(section, list);
+            };
+
+            const renderAll = () => {
+                renderNav();
+                renderList();
+            };
+
+            /* ───────────── Event handlers ───────────── */
+            /* Nav click */
+            listsNav.addEventListener("click", (e) => {
+                if (e.target.classList.contains("list-nav")) {
+                    currentListId = e.target.dataset.id;
+                    renderAll();
+                }
+            });
+
+            /* Tab 键快速切换列表 */
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Tab") {
+                    e.preventDefault();
+                    const idx = data.lists.findIndex((l) => l.id === currentListId);
+                    const nextIdx = (idx + (e.shiftKey ? -1 : 1) + data.lists.length) % data.lists.length;
+                    currentListId = data.lists[nextIdx].id;
+                    renderAll();
+                }
+            });
+
+            /* Add list */
+            addListBtn.addEventListener("click", () => {
+                const newList = { id: uuid(), name: "New List", order: data.lists.length, items: [] };
+                data.lists.push(newList);
+                currentListId = newList.id;
+                saveData();
+                renderAll();
+            });
+
+            /* Attach per‑list events */
+            const attachListEvents = (section, list) => {
+                /* Rename list */
+                const titleEl = $(".list-title", section);
+                titleEl.addEventListener("blur", () => {
+                    list.name = titleEl.textContent.trim() || "New List";
+                    saveData();
+                    renderNav();
+                });
+
+                /* Delete list */
+                $(".delete-list", section).addEventListener("click", () => {
+                    if (data.lists.length === 1) {
+                        alert("At least one list is required.");
+                        return;
+                    }
+                    if (confirm("Confirm deletion.")) {
+                        data.lists = data.lists.filter((l) => l.id !== list.id);
+                        currentListId = data.lists[0].id;
+                        saveData();
+                        renderAll();
+                    }
+                });
+
+                /* Add task */
+                const input = $(".new-task", section);
+                const addBtn = $(".add-task", section);
+                const addTask = () => {
+                    const text = input.value.trim();
+                    if (!text) return;
+                    list.items.push({ id: uuid(), text, completed: false, order: list.items.length });
+                    input.value = "";
+                    saveData();
+                    renderList();
+                };
+                addBtn.addEventListener("click", addTask);
+                input.addEventListener("keydown", (e) => e.key === "Enter" && addTask());
+
+                /* Toggle / delete task */
+                section.addEventListener("click", (e) => {
+                    const li = e.target.closest(".task");
+                    if (!li) return;
+                    const task = list.items.find((t) => t.id === li.dataset.id);
+                    if (e.target.classList.contains("toggle")) {
+                        task.completed = e.target.checked;
+                    } else if (e.target.classList.contains("delete-task")) {
+                        list.items = list.items.filter((t) => t !== task);
+                    }
+                    saveData();
+                    renderList();
+                });
+
+                /* Edit task text (double‑click) */
+                section.addEventListener("dblclick", (e) => {
+                    const li = e.target.closest(".task");
+                    if (!li) return;
+                    const span = li.querySelector("span");
+                    const task = list.items.find((t) => t.id === li.dataset.id);
+
+                    span.contentEditable = "true";
+                    span.focus();
+                    document.execCommand?.("selectAll", false, null);
+                    document.getSelection()?.collapseToEnd();
+
+                    const finish = () => {
+                        span.contentEditable = "false";
+                        const trimmed = span.textContent.trim();
+                        if (trimmed) {
+                            task.text = trimmed;
+                        } else {
+                            span.textContent = task.text; // restore original
+                        }
+                        saveData();
+                    };
+
+                    const keyHandler = (ev) => {
+                        if (ev.key === "Enter") {
+                            ev.preventDefault();
+                            finish();
+                        } else if (ev.key === "Escape") {
+                            ev.preventDefault();
+                            span.textContent = task.text;
+                            finish();
+                        }
+                    };
+                    span.addEventListener("keydown", keyHandler);
+                    span.addEventListener("blur", finish, { once: true });
+                });
+
+                /* Sortable tasks (active / done) */
+                [".tasks-active", ".tasks-done"].forEach((sel) =>
+                    new Sortable($(sel, section), {
+                        animation: 200,
+                        ghostClass: "opacity-40",
+                        onEnd: ({ to }) => {
+                            [...to.children].forEach((li, i) => {
+                                const task = list.items.find((t) => t.id === li.dataset.id);
+                                task.order = i;
+                            });
+                            saveData();
+                        },
+                    })
+                );
+            };
+
+            /* Sortable lists nav */
+            new Sortable(listsNav, {
+                animation: 200,
+                ghostClass: "opacity-40",
+                onEnd: () => {
+                    [...listsNav.children].forEach((btn, i) => {
+                        const list = data.lists.find((l) => l.id === btn.dataset.id);
+                        if (list) list.order = i;
+                    });
+                    saveData();
+                },
+            });
+
+            /* ───────────── Init ───────────── */
+            renderAll();
+        })();
+    </script>
+</body>
+
+</html>
