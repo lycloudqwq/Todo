@@ -11,18 +11,6 @@
 
     <!-- SortableJS (drag‑and‑drop) -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: "#22d3ee", // cyan-400
-                    },
-                },
-            },
-        };
-    </script>
 </head>
 
 <body class="min-h-screen bg-cyan-50 text-gray-800 font-sans flex flex-col items-center p-6 select-none">
@@ -35,14 +23,14 @@
 
     <!-- Floating action (add list) -->
     <button id="addListBtn" aria-label="Add list"
-        class="fixed bottom-6 right-6 md:right-10 bg-primary hover:bg-cyan-500 text-white w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-3xl transition transform hover:scale-105">
+        class="fixed bottom-6 right-6 md:right-10 bg-cyan-400 hover:bg-cyan-500 text-white w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-3xl transition transform hover:scale-105">
         +
     </button>
 
     <!-- ────────────────── Templates (hidden) ────────────────── -->
     <template id="listNavTpl">
         <button
-            class="list-nav whitespace-nowrap px-4 py-2 rounded-xl text-sm font-medium transition focus:outline-none border border-primary/30 hover:border-primary hover:bg-cyan-500 active:scale-95"></button>
+            class="list-nav whitespace-nowrap px-4 py-2 rounded-xl text-sm font-medium transition focus:outline-none border border-cyan-400/30 hover:border-cyan-400 hover:bg-cyan-500 active:scale-95"></button>
     </template>
 
     <template id="listTpl">
@@ -57,9 +45,9 @@
             <!-- Add task input -->
             <div class="flex mb-4">
                 <input type="text" placeholder="New Task"
-                    class="new-task flex-grow px-4 py-2 rounded-l-lg border border-gray-200 focus:ring-primary focus:border-primary focus:outline-none" />
+                    class="new-task flex-grow px-4 py-2 rounded-l-lg border border-gray-200 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none" />
                 <button
-                    class="add-task bg-primary hover:bg-cyan-500 text-white px-4 py-2 rounded-r-lg shadow transition">
+                    class="add-task bg-cyan-400 hover:bg-cyan-500 text-white px-4 py-2 rounded-r-lg shadow transition">
                     Add
                 </button>
             </div>
@@ -76,7 +64,7 @@
     <template id="taskTpl">
         <li
             class="task flex items-center gap-3 bg-cyan-100/40 hover:bg-cyan-100 rounded-xl px-4 py-2 shadow-sm cursor-grab active:cursor-grabbing transition-transform">
-            <input type="checkbox" class="toggle h-5 w-5 accent-primary" />
+            <input type="checkbox" class="toggle h-5 w-5 accent-cyan-400" />
             <span class="flex-grow break-words"></span>
             <button class="delete-task text-gray-400 hover:text-red-500" aria-label="Delete task">✕</button>
         </li>
@@ -123,11 +111,11 @@
                         const btn = tpl.cloneNode(true);
                         btn.textContent = l.name;
                         btn.dataset.id = l.id;
-                        if (data.lists.length > 4) {
+                        if (data.lists.length > 6) {
                             btn.classList.add("flex-1", "basis-0", "text-center");
                         }
                         if (l.id === currentListId) {
-                            btn.classList.add("bg-primary", "text-white", "shadow");
+                            btn.classList.add("bg-cyan-400", "text-white", "shadow");
                         }
                         listsNav.appendChild(btn);
                     });
