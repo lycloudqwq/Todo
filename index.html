@@ -11,6 +11,9 @@
 
     <!-- SortableJS (drag‑and‑drop) -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+
+    <!-- Animation -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.0/dist/confetti.browser.min.js"></script>
 </head>
 
 <body class="min-h-screen bg-cyan-50 text-gray-800 font-sans flex flex-col items-center p-6 select-none">
@@ -77,6 +80,24 @@
             const $ = (sel, ctx = document) => ctx.querySelector(sel);
             const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
             const uuid = () => crypto.randomUUID();
+
+            const burstAt = (el, extra = {}) => {
+                if (!el) return;
+                const { left, top, width, height } = el.getBoundingClientRect();
+                confetti(
+                    Object.assign(
+                        {
+                            particleCount: 80,
+                            spread: 50,
+                            origin: {
+                                x: (left + width / 2) / window.innerWidth,
+                                y: (top + height / 2 + 20) / window.innerHeight,
+                            },
+                        },
+                        extra
+                    )
+                );
+            };
 
             /* ───────────── Persistence ───────────── */
             const STORAGE_KEY = "todoApp";
@@ -216,6 +237,7 @@
                 const input = $(".new-task", section);
                 const addBtn = $(".add-task", section);
                 const addTask = () => {
+                    burstAt(addBtn);
                     const text = input.value.trim();
                     if (!text) return;
                     list.items.push({ id: uuid(), text, completed: false, order: list.items.length });
@@ -233,8 +255,10 @@
                     const task = list.items.find((t) => t.id === li.dataset.id);
                     if (e.target.classList.contains("toggle")) {
                         task.completed = e.target.checked;
+                        if (task.completed) burstAt(e.target);
                     } else if (e.target.classList.contains("delete-task")) {
                         list.items = list.items.filter((t) => t !== task);
+                        burstAt(e.target, { shapes: ["star"], particleCount: 50, scalar: 1.2 });
                     }
                     saveData();
                     renderList();
