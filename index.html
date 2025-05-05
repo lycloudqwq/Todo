@@ -12,8 +12,8 @@
     <!-- SortableJS (drag‑and‑drop) -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 
-    <!-- Animation -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.0/dist/confetti.browser.min.js"></script>
+    <!-- From https://github.com/D-Sketon/mouse-firework -->
+    <script src="https://cdn.jsdelivr.net/npm/mouse-firework@latest/dist/index.umd.js"></script>
 </head>
 
 <body class="min-h-screen bg-cyan-50 text-gray-800 font-sans flex flex-col items-center p-6 select-none">
@@ -81,22 +81,47 @@
             const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
             const uuid = () => crypto.randomUUID();
 
-            const burstAt = (el, extra = {}) => {
-                if (!el) return;
-                const { left, top, width, height } = el.getBoundingClientRect();
-                confetti(
-                    Object.assign(
+            /* ───────────── Firework ───────────── */
+            const boom = (el) => {
+                if (!window.firework || !el) return;          // lib 未加载则跳过
+                const r = el.getBoundingClientRect();
+                firework({
+                    "excludeElements": [],
+                    "particles": [
                         {
-                            particleCount: 80,
-                            spread: 50,
-                            origin: {
-                                x: (left + width / 2) / window.innerWidth,
-                                y: (top + height / 2 + 20) / window.innerHeight,
-                            },
+                            "shape": "circle",
+                            "move": ["emit"],
+                            "easing": "easeOutExpo",
+                            "colors": [
+                                "#ff324a",
+                                "#31ffa6",
+                                "#4CFFFF",
+                                "#ffff99"
+                            ],
+                            "number": 30,
+                            "duration": [1600, 2400],
+                            "shapeOptions": {
+                                "radius": [16, 32]
+                            }
                         },
-                        extra
-                    )
-                );
+                        {
+                            "shape": "circle",
+                            "move": ["diffuse"],
+                            "easing": "easeOutExpo",
+                            "colors": ["#22d3ee"],
+                            "number": 1,
+                            "duration": [1600, 2400],
+                            "shapeOptions": {
+                                "radius": 20,
+                                "alpha": 0.5,
+                                "lineWidth": 12
+                            },
+                            "moveOptions": {
+                                "diffuseRadius": [120, 200]
+                            }
+                        }
+                    ]
+                });
             };
 
             /* ───────────── Persistence ───────────── */
@@ -237,7 +262,7 @@
                 const input = $(".new-task", section);
                 const addBtn = $(".add-task", section);
                 const addTask = () => {
-                    burstAt(addBtn);
+                    boom(addBtn);
                     const text = input.value.trim();
                     if (!text) return;
                     list.items.push({ id: uuid(), text, completed: false, order: list.items.length });
@@ -254,11 +279,11 @@
                     if (!li) return;
                     const task = list.items.find((t) => t.id === li.dataset.id);
                     if (e.target.classList.contains("toggle")) {
+                        boom(e.target);
                         task.completed = e.target.checked;
-                        if (task.completed) burstAt(e.target);
                     } else if (e.target.classList.contains("delete-task")) {
+                        boom(e.target);
                         list.items = list.items.filter((t) => t !== task);
-                        burstAt(e.target, { shapes: ["star"], particleCount: 50, scalar: 1.2 });
                     }
                     saveData();
                     renderList();
