@@ -73,6 +73,18 @@
     <!-- From https://github.com/D-Sketon/mouse-firework -->
     <script src="https://cdn.jsdelivr.net/npm/mouse-firework@latest/dist/index.umd.js"></script>
     <script>
+        /* 允许触发烟花的元素选择器 */
+        const FW_ALLOWED = [".add-task", ".delete-task", ".toggle"];
+        const guard = (e) => {
+            /* ① 伪造事件会带 _fwOK=true —— 直接放行 */
+            if (e._fwOK) return;
+            /* ② 真实点击：检查目标及其祖先是否匹配允许列表 */
+            const hit = FW_ALLOWED.some((sel) => e.target.closest(sel));
+            if (!hit) e.stopImmediatePropagation();          // 阻断给 mouse‑firework
+        };
+        /* 提前到捕获阶段注册，比 firework 更早拦截 */
+        window.addEventListener("click", guard, true);
+        
         /* ───────────── Firework ───────────── */
         firework({
             "excludeElements": [],
@@ -107,13 +119,13 @@
             const boom = (el) => {
                 if (!el) return;
                 const { left, top, width, height } = el.getBoundingClientRect();
-                window.dispatchEvent(
-                    new MouseEvent("click", {
-                        clientX: left + width / 2,
-                        clientY: top + height / 2,
-                        bubbles: true,
-                    })
-                );
+                const evt = new MouseEvent("click", {
+                    clientX: left + width / 2,
+                    clientY: top + height / 2,
+                    bubbles: true,
+                });
+                evt._fwOK = true;             // ← 允许通过守卫
+                window.dispatchEvent(evt);
             };
 
             /* ───────────── Persistence ───────────── */
