@@ -82,32 +82,38 @@
             const uuid = () => crypto.randomUUID();
 
             /* ───────────── Firework ───────────── */
+            firework({
+                "excludeElements": ["*"],
+                "particles": [{
+                    "shape": "circle",
+                    "move": ["emit"],
+                    "easing": "easeOutExpo",
+                    "colors": ["#ff324a", "#31ffa6", "#4CFFFF", "#ffff99"],
+                    "number": 30,
+                    "duration": [1600, 2400],
+                    "shapeOptions": { "radius": [16, 32] }
+                }, {
+                    "shape": "circle",
+                    "move": ["diffuse"],
+                    "easing": "easeOutExpo",
+                    "colors": ["#22d3ee"],
+                    "number": 1,
+                    "duration": [1600, 2400],
+                    "shapeOptions": { "radius": 20, "alpha": 0.5, "lineWidth": 12 },
+                    "moveOptions": { "diffuseRadius": [120, 200] }
+                }]
+            });
+
             const boom = (el) => {
-                if (!window.firework || !el) return;          // lib 未加载则跳过
-                const r = el.getBoundingClientRect();
-                firework({
-                    x: (r.left + r.width / 2) / window.innerWidth,
-                    y: (r.top + r.height / 2) / window.innerHeight,
-                    "excludeElements": [],
-                    "particles": [{
-                        "shape": "circle",
-                        "move": ["emit"],
-                        "easing": "easeOutExpo",
-                        "colors": ["#ff324a", "#31ffa6", "#4CFFFF", "#ffff99"],
-                        "number": 30,
-                        "duration": [1600, 2400],
-                        "shapeOptions": { "radius": [16, 32] }
-                    }, {
-                        "shape": "circle",
-                        "move": ["diffuse"],
-                        "easing": "easeOutExpo",
-                        "colors": ["#22d3ee"],
-                        "number": 1,
-                        "duration": [1600, 2400],
-                        "shapeOptions": { "radius": 20, "alpha": 0.5, "lineWidth": 12 },
-                        "moveOptions": { "diffuseRadius": [120, 200] }
-                    }]
-                });
+                if (!el) return;
+                const { left, top, width, height } = el.getBoundingClientRect();
+                window.dispatchEvent(
+                    new MouseEvent("click", {
+                        clientX: left + width / 2,
+                        clientY: top + height / 2,
+                        bubbles: true,
+                    })
+                );
             };
 
             /* ───────────── Persistence ───────────── */
