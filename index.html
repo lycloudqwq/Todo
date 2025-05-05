@@ -11,9 +11,6 @@
 
     <!-- SortableJS (drag‑and‑drop) -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-
-    <!-- From https://github.com/D-Sketon/mouse-firework -->
-    <script src="https://cdn.jsdelivr.net/npm/mouse-firework@latest/dist/index.umd.js"></script>
 </head>
 
 <body class="min-h-screen bg-cyan-50 text-gray-800 font-sans flex flex-col items-center p-6 select-none">
@@ -73,6 +70,32 @@
         </li>
     </template>
 
+    <!-- From https://github.com/D-Sketon/mouse-firework -->
+    <script src="https://cdn.jsdelivr.net/npm/mouse-firework@latest/dist/index.umd.js"></script>
+    <script>
+        /* ───────────── Firework ───────────── */
+        firework({
+            "excludeElements": [],
+            "particles": [{
+                "shape": "circle",
+                "move": ["emit"],
+                "easing": "easeOutExpo",
+                "colors": ["#ff324a", "#31ffa6", "#4CFFFF", "#ffff99"],
+                "number": 30,
+                "duration": [1600, 2400],
+                "shapeOptions": { "radius": [16, 32] }
+            }, {
+                "shape": "circle",
+                "move": ["diffuse"],
+                "easing": "easeOutExpo",
+                "colors": ["#22d3ee"],
+                "number": 1,
+                "duration": [1600, 2400],
+                "shapeOptions": { "radius": 20, "alpha": 0.5, "lineWidth": 10 },
+                "moveOptions": { "diffuseRadius": [120, 200] }
+            }]
+        });
+    </script>
     <!-- ────────────────── Application Logic ────────────────── -->
     <script>
         (function () {
@@ -80,29 +103,6 @@
             const $ = (sel, ctx = document) => ctx.querySelector(sel);
             const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
             const uuid = () => crypto.randomUUID();
-
-            /* ───────────── Firework ───────────── */
-            firework({
-                "excludeElements": ["*"],
-                "particles": [{
-                    "shape": "circle",
-                    "move": ["emit"],
-                    "easing": "easeOutExpo",
-                    "colors": ["#ff324a", "#31ffa6", "#4CFFFF", "#ffff99"],
-                    "number": 30,
-                    "duration": [1600, 2400],
-                    "shapeOptions": { "radius": [16, 32] }
-                }, {
-                    "shape": "circle",
-                    "move": ["diffuse"],
-                    "easing": "easeOutExpo",
-                    "colors": ["#22d3ee"],
-                    "number": 1,
-                    "duration": [1600, 2400],
-                    "shapeOptions": { "radius": 20, "alpha": 0.5, "lineWidth": 12 },
-                    "moveOptions": { "diffuseRadius": [120, 200] }
-                }]
-            });
 
             const boom = (el) => {
                 if (!el) return;
