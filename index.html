@@ -84,7 +84,7 @@
         };
         /* 提前到捕获阶段注册，比 firework 更早拦截 */
         window.addEventListener("click", guard, true);
-        
+
         /* ───────────── Firework ───────────── */
         firework({
             "excludeElements": [],
@@ -154,11 +154,11 @@
             /* ───────────── Rendering ───────────── */
             const renderNav = () => {
                 listsNav.innerHTML = "";
-                const tpl = $("#listNavTpl").content.firstElementChild;
+                const tpl = $("#listNavTpl");
                 data.lists
                     .sort((a, b) => a.order - b.order)
                     .forEach((l) => {
-                        const btn = tpl.cloneNode(true);
+                        const btn = tpl.content.cloneNode(true).firstElementChild;
                         btn.textContent = l.name;
                         btn.dataset.id = l.id;
                         if (data.lists.length > 6) {
